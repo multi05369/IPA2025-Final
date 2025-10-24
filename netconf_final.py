@@ -11,11 +11,7 @@ ALLOWED_IPS = {
     "10.0.15.65",
 }
 
-# Credentials (read from env in the controller or set directly here)
-# If you prefer env here, import os and read variables directly:
-# import os
-# ROUTER_USER = os.environ.get("ROUTER_USER", "admin")
-# ROUTER_PASS = os.environ.get("ROUTER_PASS", "cisco")
+
 ROUTER_USER = "admin"
 ROUTER_PASS = "cisco"
 
