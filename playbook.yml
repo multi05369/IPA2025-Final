@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   vars:
-    router_ip: 10.0.15.61
+    router_ip: "{{ router_ip | default('10.0.15.61') }}"
     router_user: admin
     router_pass: cisco
     ssh_args: >-
@@ -30,6 +30,6 @@
     - name: Save to local file
       ansible.builtin.copy:
         content: "{{ run.stdout }}"
-        dest: show_run_66070101_R1-Exam.txt
+        dest: show_run_66070101_Router-Exam.txt
       delegate_to: localhost
       when: run.stdout | length > 0
