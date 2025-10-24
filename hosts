@@ -1,8 +1,6 @@
 [routers]
-ExamRouter ansible_host=10.0.15.61
-
-[routers:vars]
-ansible_connection=network_cli
-ansible_network_os=cisco.ios.ios
-ansible_user=admin
-ansible_password=cisco
+10.0.15.61 ansible_user=admin ansible_password=cisco
+10.0.15.62 ansible_user=admin ansible_password=cisco
+10.0.15.63 ansible_user=admin ansible_password=cisco
+10.0.15.64 ansible_user=admin ansible_password=cisco
+10.0.15.65 ansible_user=admin ansible_password=cisco

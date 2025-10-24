@@ -1,0 +1,39 @@
+---
+- name: Configure MOTD via system ssh
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Defaults; they can be overridden via --extra-vars JSON
+    router_ip: "10.0.15.61"
+    router_user: "admin"
+    router_pass: "cisco"
+    delim: "%"
+    motd_message: |-
+      Authorized Access Only! Managed by 66070101
+    ssh_args: >-
+      -o StrictHostKeyChecking=no
+      -o KexAlgorithms=+diffie-hellman-group14-sha1
+      -o HostKeyAlgorithms=+ssh-rsa
+      -o PubkeyAcceptedAlgorithms=+ssh-rsa
+      -o Ciphers=+aes256-ctr,aes192-ctr,aes128-ctr
+
+  tasks:
+    - name: Set banner MOTD using heredoc over system ssh
+      ansible.builtin.shell: |
+        sshpass -p '{{ router_pass }}' ssh -tt {{ ssh_args }} {{ router_user }}@{{ router_ip }} <<'EOSSH'
+        terminal length 0
+        configure terminal
+        banner motd {{ delim }}
+        {{ motd_message }}
+        {{ delim }}
+        end
+        write memory
+        exit
+        EOSSH
+      register: motd_set
+      changed_when: motd_set.rc == 0
+      failed_when: motd_set.rc != 0
+
+    - name: Show brief output for verification
+      ansible.builtin.debug:
+        var: motd_set.stdout_lines

@@ -4,7 +4,6 @@ import json
 import requests
 import dotenv
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-
 import restconf_final as restconf
 import netconf_final as netconf
 import netmiko_final as netmiko
@@ -131,7 +130,7 @@ def handle_part1_command(cmd: str, ip: str | None) -> str:
             elif cmd == "status":
                 msg = restconf.status(ip=ip)
             else:
-                return "Error: No command or unknown command"
+                return "Error: No command found."
             return _append_method_suffix(msg, cmd, current_method)
 
         elif current_method == METHOD_NETCONF:
@@ -146,13 +145,13 @@ def handle_part1_command(cmd: str, ip: str | None) -> str:
             elif cmd == "status":
                 msg = netconf.status(ip=ip)
             else:
-                return "Error: No command or unknown command"
+                return "Error: No command found."
             return _append_method_suffix(msg, cmd, current_method)
 
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
 
-    return "Error: No command or unknown command"
+    return "Error: No command found."
 
 
 def handle_showrun(ip: str | None):
@@ -163,7 +162,6 @@ def handle_showrun(ip: str | None):
     If filename, attach it to Webex and return None (since we posted already).
     If Error, return the error string to be posted as text.
     """
-    # ansible_final.showrun handles IP validation and returns proper errors
     try:
         result = ansible.showrun(ip=ip)
     except Exception as e:
@@ -172,7 +170,6 @@ def handle_showrun(ip: str | None):
     if not result or result.startswith("Error:"):
         return result or "Error: Ansible"
 
-    # Attach the file
     filename = result
     try:
         with open(filename, "rb") as f:
@@ -199,8 +196,32 @@ def handle_showrun(ip: str | None):
         print("Attach file failed:", e)
         return "Error: Ansible"
 
-    # We already posted the file with text, so no further text reply needed
     return None
+
+
+def handle_motd_set(ip: str | None, message: str | None) -> str:
+    """
+    Set MOTD via Ansible:
+      returns "Ok: success" or "Error: ..."
+    """
+    # ansible.motd_set will also validate IP/message
+    try:
+        result = ansible.motd_set(ip=ip, message=message)
+    except Exception as e:
+        result = f"Error: {type(e).__name__}: {e}"
+    return result
+
+
+def handle_motd_get(ip: str | None) -> str:
+    """
+    Get MOTD via Netmiko/TextFSM:
+      returns banner text or "Error: No MOTD Configured" or "Error: ..."
+    """
+    try:
+        result = netmiko.motd_get(ip=ip)
+    except Exception as e:
+        result = f"Error: {type(e).__name__}: {e}"
+    return result
 
 
 # ---------------------------------------
@@ -219,6 +240,8 @@ def parse_command(text: str):
     - gigabit_status          -> error: missing IP
     - <ip> showrun
     - showrun                 -> error: missing IP
+    - <ip> motd <message...>  -> set motd via ansible
+    - <ip> motd               -> get motd via netmiko
     - lone IP                 -> "Error: No command found."
     """
     parts = text.strip().split()
@@ -238,6 +261,15 @@ def parse_command(text: str):
         return {"type": "showrun", "ip": parts[0]}
     if len(parts) == 1 and parts[0] == "showrun":
         return {"type": "showrun", "ip": None}
+
+    # MOTD:
+    # "<ip> motd <message...>" => set
+    if len(parts) >= 3 and parts[1] == "motd":
+        msg = " ".join(parts[2:])
+        return {"type": "motd_set", "ip": parts[0], "message": msg}
+    # "<ip> motd" => get
+    if len(parts) == 2 and parts[1] == "motd":
+        return {"type": "motd_get", "ip": parts[0]}
 
     # Part1 actions
     part1_actions = {"create", "delete", "enable", "disable", "status"}
@@ -308,13 +340,20 @@ def main():
 
         elif parsed["type"] == "gigabit_status":
             try:
-                # netmiko.gigabit_status does its own IP validation too
                 response_message = netmiko.gigabit_status(ip=parsed.get("ip"))
             except Exception as e:
                 response_message = f"Error: {type(e).__name__}: {e}"
 
         elif parsed["type"] == "showrun":
             response_message = handle_showrun(parsed.get("ip"))
+
+        elif parsed["type"] == "motd_set":
+            response_message = handle_motd_set(
+                parsed.get("ip"), parsed.get("message")
+            )
+
+        elif parsed["type"] == "motd_get":
+            response_message = handle_motd_get(parsed.get("ip"))
 
         elif parsed["type"] == "error":
             response_message = parsed["message"]
