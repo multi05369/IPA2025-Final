@@ -79,12 +79,6 @@ def motd_set(ip: Optional[str], message: Optional[str]) -> str:
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         stdout = result.stdout or ""
-        stderr = result.stderr or ""
-
-        # Debug prints if you need to diagnose
-        # print("RC:", result.returncode)
-        # print("STDOUT:\n", stdout)
-        # print("STDERR:\n", stderr)
 
         if result.returncode != 0:
             return "Error: Ansible"
