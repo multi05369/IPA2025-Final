@@ -35,7 +35,7 @@ def showrun(ip: Optional[str] = None) -> str:
             print("STDERR:\n", stderr[:2000])
 
         if "ok=" in stdout:
-            return "show_run_66070101_R1-Exam.txt"
+            return "show_run_66070101_Router-Exam.txt"
         else:
             return "Error: Ansible"
     except Exception as e:
