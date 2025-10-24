@@ -1,0 +1,35 @@
+---
+- name: Backup running config via system ssh
+  hosts: localhost
+  gather_facts: false
+  vars:
+    router_ip: 10.0.15.61
+    router_user: admin
+    router_pass: cisco
+    ssh_args: >-
+      -o StrictHostKeyChecking=no
+      -o KexAlgorithms=+diffie-hellman-group14-sha1
+      -o HostKeyAlgorithms=+ssh-rsa
+      -o Ciphers=+aes256-ctr,aes192-ctr,aes128-ctr
+  tasks:
+    - name: Fetch running-config (heredoc)
+      ansible.builtin.shell: |
+        sshpass -p '{{ router_pass }}' ssh -tt {{ ssh_args }} {{ router_user }}@{{ router_ip }} <<'EOF'
+        terminal length 0
+        show running-config
+        exit
+        EOF
+      register: run
+      changed_when: false
+      failed_when: run.rc != 0 or (run.stdout is not defined)
+
+    - name: Debug first 3 lines (for visibility)
+      ansible.builtin.debug:
+        msg: "{{ run.stdout.split('\n')[:3] }}"
+
+    - name: Save to local file
+      ansible.builtin.copy:
+        content: "{{ run.stdout }}"
+        dest: show_run_66070101_R1-Exam.txt
+      delegate_to: localhost
+      when: run.stdout | length > 0
