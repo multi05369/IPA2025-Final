@@ -2,6 +2,7 @@
 
 จัดทำโดย
 - นายนัฐพงษ์ วงค์สมศรี (66070101)
+- Link to Google Doc [Link](https://docs.google.com/document/d/18DNi5KGdTAv6lbwD7UUfPc7KoW5WyPdyLPVN6BHBT2k/edit?usp=sharing)
 
 ให้นักศึกษาทำต่อจาก IPA2024-Final โดยมีการเพิ่มเติมดังนี้ และเมื่อทำเสร็จแล้วให้ทำรายงาน Google Docs ส่ง Link ที่ → https://forms.gle/cWGbYwSj7BSGswxr9 ภายในเวลา 12:00 น. วันที่ 25 ต.ค. 2025
 
